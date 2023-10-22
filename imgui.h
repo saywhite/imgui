@@ -29,6 +29,21 @@
 #define IMGUI_HAS_VIEWPORT          // Viewport WIP branch
 #define IMGUI_HAS_DOCK              // Docking WIP branch
 
+//
+// Adaptations for ImGui Bundle are noted with [ADAPT_IMGUI_BUNDLE]
+//
+// [ADAPT_IMGUI_BUNDLE]
+#ifdef IMGUI_BUNDLE_PYTHON_API
+#include <vector>   // Used *once* to make the FontAtlas api accessible on python
+#include <optional>
+#endif
+// IMGUI_BUNDLE_PYTHON_UNSUPPORTED_API is always defined (even when building python bindings),
+// but is used as a marker to exclude certain functions from the python binding code.
+#define IMGUI_BUNDLE_PYTHON_UNSUPPORTED_API
+// [/ADAPT_IMGUI_BUNDLE]
+
+
+
 /*
 
 Index of this file:
@@ -269,7 +284,7 @@ struct ImVec2
     float& operator[] (size_t idx)          { IM_ASSERT(idx == 0 || idx == 1); return ((float*)(void*)(char*)this)[idx]; } // We very rarely use this [] operator, so the assert overhead is fine.
     float  operator[] (size_t idx) const    { IM_ASSERT(idx == 0 || idx == 1); return ((const float*)(const void*)(const char*)this)[idx]; }
 #ifdef IM_VEC2_CLASS_EXTRA
-    IM_VEC2_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec2.
+    IM_VEC2_CLASS_EXTRA;     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec2.
 #endif
 };
 
@@ -280,7 +295,7 @@ struct ImVec4
     constexpr ImVec4()                                        : x(0.0f), y(0.0f), z(0.0f), w(0.0f) { }
     constexpr ImVec4(float _x, float _y, float _z, float _w)  : x(_x), y(_y), z(_z), w(_w) { }
 #ifdef IM_VEC4_CLASS_EXTRA
-    IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
+    IM_VEC4_CLASS_EXTRA;     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
 #endif
 };
 IM_MSVC_RUNTIME_CHECKS_RESTORE
@@ -636,11 +651,15 @@ namespace ImGui
     IMGUI_API bool          CollapsingHeader(const char* label, bool* p_visible, ImGuiTreeNodeFlags flags = 0); // when 'p_visible != NULL': if '*p_visible==true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if '*p_visible==false' don't display the header.
     IMGUI_API void          SetNextItemOpen(bool is_open, ImGuiCond cond = 0);                  // set next TreeNode/CollapsingHeader open state.
 
+// [ADAPT_IMGUI_BUNDLE]
     // Widgets: Selectables
     // - A selectable highlights when hovered, and can display another color when selected.
     // - Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.
+#ifdef IMGUI_BUNDLE_PYTHON_UNSUPPORTED_API
     IMGUI_API bool          Selectable(const char* label, bool selected = false, ImGuiSelectableFlags flags = 0, const ImVec2& size = ImVec2(0, 0)); // "bool selected" carry the selection state (read-only). Selectable() is clicked is returns true so you can modify your selection state. size.x==0.0: use remaining width, size.x>0.0: specify width. size.y==0.0: use label height, size.y>0.0: specify height
+#endif
     IMGUI_API bool          Selectable(const char* label, bool* p_selected, ImGuiSelectableFlags flags = 0, const ImVec2& size = ImVec2(0, 0));      // "bool* p_selected" point to the selection state (read-write), as a convenient helper.
+// [/ADAPT_IMGUI_BUNDLE]
 
     // Widgets: List Boxes
     // - This is essentially a thin wrapper to using BeginChild/EndChild with some stylistic changes.
@@ -677,9 +696,17 @@ namespace ImGui
     IMGUI_API bool          BeginMainMenuBar();                                                 // create and append to a full screen menu-bar.
     IMGUI_API void          EndMainMenuBar();                                                   // only call EndMainMenuBar() if BeginMainMenuBar() returns true!
     IMGUI_API bool          BeginMenu(const char* label, bool enabled = true);                  // create a sub-menu entry. only call EndMenu() if this returns true!
-    IMGUI_API void          EndMenu();                                                          // only call EndMenu() if BeginMenu() returns true!
+
+    // [ADAPT_IMGUI_BUNDLE]
+
+    // only call EndMenu() if BeginMenu() returns true!
+    IMGUI_API void          EndMenu();
+
+#ifdef IMGUI_BUNDLE_PYTHON_UNSUPPORTED_API
     IMGUI_API bool          MenuItem(const char* label, const char* shortcut = NULL, bool selected = false, bool enabled = true);  // return true when activated.
+#endif
     IMGUI_API bool          MenuItem(const char* label, const char* shortcut, bool* p_selected, bool enabled = true);              // return true when activated + toggle (*p_selected) if p_selected != NULL
+    // [/ADAPT_IMGUI_BUNDLE]
 
     // Tooltips
     // - Tooltips are windows following the mouse. They do not take focus away.
@@ -2036,6 +2063,15 @@ struct ImGuiStyle
     ImGuiHoveredFlags HoverFlagsForTooltipMouse;// Default flags when using IsItemHovered(ImGuiHoveredFlags_ForTooltip) or BeginItemTooltip()/SetItemTooltip() while using mouse.
     ImGuiHoveredFlags HoverFlagsForTooltipNav;  // Default flags when using IsItemHovered(ImGuiHoveredFlags_ForTooltip) or BeginItemTooltip()/SetItemTooltip() while using keyboard/gamepad.
 
+    // [ADAPT_IMGUI_BUNDLE]
+#ifdef IMGUI_BUNDLE_PYTHON_API
+    // python adapter for ImGuiStyle::Colors[ImGuiCol_COUNT]
+    // You can query and modify those values (0 <= idxColor < Col_.count)
+    inline IMGUI_API  ImVec4& Color_(size_t idxColor) { IM_ASSERT( (idxColor >=0) && (idxColor < ImGuiCol_COUNT)); return Colors[idxColor]; }
+    inline IMGUI_API  void SetColor_(size_t idxColor, ImVec4 color) { IM_ASSERT( (idxColor >=0) && (idxColor < ImGuiCol_COUNT)); Colors[idxColor] = color; }
+#endif
+    // [/ADAPT_IMGUI_BUNDLE]
+
     IMGUI_API ImGuiStyle();
     IMGUI_API void ScaleAllSizes(float scale_factor);
 };
@@ -2260,6 +2296,14 @@ struct ImGuiIO
     ImVector<ImWchar> InputQueueCharacters;         // Queue of _characters_ input (obtained by platform backend). Fill using AddInputCharacter() helper.
 
     IMGUI_API   ImGuiIO();
+
+    // [ADAPT_IMGUI_BUNDLE]
+
+    #ifdef IMGUI_BUNDLE_PYTHON_API
+    IMGUI_API void SetIniFilename(const char* filename);
+    IMGUI_API void SetLogFilename(const char* filename);
+    #endif
+    // [/ADAPT_IMGUI_BUNDLE]
 };
 
 //-----------------------------------------------------------------------------
@@ -2367,6 +2411,14 @@ struct ImGuiTableColumnSortSpecs
     ImGuiSortDirection          SortDirection : 8;  // ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending
 
     ImGuiTableColumnSortSpecs() { memset(this, 0, sizeof(*this)); }
+
+    // [ADAPT_IMGUI_BUNDLE]
+#ifdef IMGUI_BUNDLE_PYTHON_API
+    inline IMGUI_API ImGuiSortDirection GetSortDirection() { return SortDirection; }
+    inline IMGUI_API void SetSortDirection(ImGuiSortDirection direction) { SortDirection = direction; }
+#endif
+    // [/ADAPT_IMGUI_BUNDLE]
+
 };
 
 // Sorting specifications for a table (often handling sort specs for a single column, occasionally more)
@@ -2380,6 +2432,14 @@ struct ImGuiTableSortSpecs
     bool                        SpecsDirty;     // Set to true when specs have changed since last time! Use this to sort again, then clear the flag.
 
     ImGuiTableSortSpecs()       { memset(this, 0, sizeof(*this)); }
+
+// [ADAPT_IMGUI_BUNDLE]
+
+#ifdef IMGUI_BUNDLE_PYTHON_API
+    inline IMGUI_API const ImGuiTableColumnSortSpecs& GetSpecs(size_t idx) { IM_ASSERT((idx >= 0) && (idx < SpecsCount)); return Specs[idx];}
+#endif
+// [/ADAPT_IMGUI_BUNDLE]
+
 };
 
 //-----------------------------------------------------------------------------
@@ -3049,6 +3109,40 @@ struct ImFontAtlas
     IMGUI_API const ImWchar*    GetGlyphRangesVietnamese();             // Default + Vietnamese characters
 
     //-------------------------------------------
+    // [ADAPT_IMGUI_BUNDLE]
+    //-------------------------------------------
+
+#ifdef IMGUI_BUNDLE_PYTHON_API
+    IMGUI_API ImFont* _AddFontFromFileTTF(
+        const char* filename,
+        float size_pixels,
+        const ImFontConfig* font_cfg = NULL,
+        std::optional<std::vector<ImWchar>> glyph_ranges_as_int_list = std::nullopt);
+
+    std::vector<ImWchar> _ImWcharRangeToVec(const ImWchar* range);
+
+    IMGUI_API inline std::vector<ImWchar>    _GetGlyphRangesDefault()                // Basic Latin, Extended Latin
+    { return _ImWcharRangeToVec(GetGlyphRangesDefault()); }
+    IMGUI_API inline std::vector<ImWchar>    _GetGlyphRangesGreek()                  // Default + Greek and Coptic
+    { return _ImWcharRangeToVec(GetGlyphRangesGreek()); }
+    IMGUI_API inline std::vector<ImWchar>    _GetGlyphRangesKorean()                 // Default + Korean characters
+    { return _ImWcharRangeToVec(GetGlyphRangesKorean()); }
+    IMGUI_API inline std::vector<ImWchar>    _GetGlyphRangesJapanese()               // Default + Hiragana, Katakana, Half-Width, Selection of 2999 Ideographs
+    { return _ImWcharRangeToVec(GetGlyphRangesJapanese()); }
+    IMGUI_API inline std::vector<ImWchar>    _GetGlyphRangesChineseFull()            // Default + Half-Width + Japanese Hiragana/Katakana + full set of about 21000 CJK Unified Ideographs
+    { return _ImWcharRangeToVec(GetGlyphRangesChineseFull()); }
+    IMGUI_API inline std::vector<ImWchar>    _GetGlyphRangesChineseSimplifiedCommon()// Default + Half-Width + Japanese Hiragana/Katakana + set of 2500 CJK Unified Ideographs for common simplified Chinese
+    { return _ImWcharRangeToVec(GetGlyphRangesChineseSimplifiedCommon()); }
+    IMGUI_API inline std::vector<ImWchar>    _GetGlyphRangesCyrillic()               // Default + about 400 Cyrillic characters
+    { return _ImWcharRangeToVec(GetGlyphRangesCyrillic()); }
+    IMGUI_API inline std::vector<ImWchar>    _GetGlyphRangesThai()                   // Default + Thai characters
+    { return _ImWcharRangeToVec(GetGlyphRangesThai()); }
+    IMGUI_API inline std::vector<ImWchar>    _GetGlyphRangesVietnamese()             // Default + Vietnamese characters
+    { return _ImWcharRangeToVec(GetGlyphRangesVietnamese()); }
+#endif
+    // [/ADAPT_IMGUI_BUNDLE]
+
+    //-------------------------------------------
     // [BETA] Custom Rectangles/Glyphs API
     //-------------------------------------------
 
@@ -3221,7 +3315,10 @@ struct ImGuiViewport
     bool                PlatformRequestClose;   // Platform window requested closure (e.g. window was moved by the OS / host window manager, e.g. pressing ALT-F4)
 
     ImGuiViewport()     { memset(this, 0, sizeof(*this)); }
-    ~ImGuiViewport()    { IM_ASSERT(PlatformUserData == NULL && RendererUserData == NULL); }
+    // [ADAPT_IMGUI_BUNDLE]
+    ~ImGuiViewport() noexcept(false)   { IM_ASSERT(PlatformUserData == NULL && RendererUserData == NULL); }
+    // [/ADAPT_IMGUI_BUNDLE]
+
 
     // Helpers
     ImVec2              GetCenter() const       { return ImVec2(Pos.x + Size.x * 0.5f, Pos.y + Size.y * 0.5f); }
