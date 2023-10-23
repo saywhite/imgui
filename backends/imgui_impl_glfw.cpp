@@ -941,7 +941,7 @@ struct ImGui_ImplGlfw_ViewportData
 #endif
 
     ImGui_ImplGlfw_ViewportData()  { memset(this, 0, sizeof(*this)); IgnoreWindowSizeEventFrame = IgnoreWindowPosEventFrame = -1; }
-    // [ADAPT_IMGUI_BUNDLE]
+    // [ADAPT_MINI_BUNDLE]
     ~ImGui_ImplGlfw_ViewportData() noexcept(false) { IM_ASSERT(Window == nullptr); }
 };
 

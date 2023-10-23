@@ -3000,9 +3000,9 @@ static void UnpackAccumulativeOffsetsIntoRanges(int base_codepoint, const short*
 
 
 //-------------------------------------------
-// [ADAPT_IMGUI_BUNDLE]
+// [ADAPT_MINI_BUNDLE]
 //-------------------------------------------
-#ifdef IMGUI_BUNDLE_PYTHON_API
+#ifdef MINI_BUNDLE_PYTHON_API
 ImFont* ImFontAtlas::_AddFontFromFileTTF(
     const char* filename,
     float size_pixels,
@@ -3051,7 +3051,7 @@ std::vector<ImWchar> ImFontAtlas::_ImWcharRangeToVec(const ImWchar* range)
 }
 
 
-#endif // IMGUI_BUNDLE_PYTHON_API
+#endif // MINI_BUNDLE_PYTHON_API
 
 
 //-------------------------------------------------------------------------

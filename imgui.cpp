@@ -1678,8 +1678,8 @@ void ImGuiIO::AddFocusEvent(bool focused)
     g.InputEventsQueue.push_back(e);
 }
 
-// [ADAPT_IMGUI_BUNDLE]
-#ifdef IMGUI_BUNDLE_PYTHON_API
+// [ADAPT_MINI_BUNDLE]
+#ifdef MINI_BUNDLE_PYTHON_API
 void ImGuiIO::SetIniFilename(const char* filename)
 {
     // ImGuiIO::IniFilename is a bare pointer with no storage
@@ -10081,8 +10081,8 @@ void    ImGui::ErrorCheckEndWindowRecover(ImGuiErrorLogCallback log_callback, vo
     }
 }
 
-// [ADAPT_IMGUI_BUNDLE]
-#ifdef IMGUI_BUNDLE_PYTHON_API
+// [ADAPT_MINI_BUNDLE]
+#ifdef MINI_BUNDLE_PYTHON_API
 namespace Details_CppCallbackAdapters
 {
     std::string va_list_to_string(const char* fmt, va_list args)
@@ -10153,8 +10153,8 @@ void    ImGui::ErrorCheckEndWindowRecover(ImGuiErrorStringCallback callback)
     ImGui::ErrorCheckEndWindowRecover(Details_CppCallbackAdapters::CStyle_ErrorCheckEndWindowRecover);
     Details_CppCallbackAdapters::gErrorCheckEndWindowRecover = {};
 }
-#endif // #ifdef IMGUI_BUNDLE_PYTHON_API
-// [/ADAPT_IMGUI_BUNDLE]
+#endif // #ifdef MINI_BUNDLE_PYTHON_API
+// [/ADAPT_MINI_BUNDLE]
 
 
 // Save current stack sizes for later compare
